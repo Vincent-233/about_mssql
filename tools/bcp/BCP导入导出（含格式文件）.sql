@@ -17,7 +17,7 @@ bcp AdventureWorks2012.HumanResources.Department format nul -f D:\TestFormatFile
 bcp AdventureWorks2012.dbo.Department_Test in D:\Department.txt -f D:\TestFormatFile.xml -T
 
 -- 导入到远程服务器（bcp 含格式文件）
-bcp TestDB.dbo.Department_Test in D:\Department.txt -f D:\TestFormatFile.xml -S WIN-4GK864H3VSS\SQL2012,1433 -U sa -P benjay@123
+bcp TestDB.dbo.Department_Test in D:\Department.txt -f D:\TestFormatFile.xml -S WIN-4GK864H3VSS\SQL2012,1433 -U sa -P pwd@123
 
 -- 导入远程服务器（无格式文件）
 bcp YFAI_KYBPMUAT.dbo.Department_Copy IN D:\Department.txt -c -t\t -S 172.28.13.230,4122,1433 -U xxxx_owner -P tstDSD!324dssaf
@@ -33,7 +33,7 @@ bcp {target_table} in {file_path} -c -T -t"|" -S {server_name} -F 2
 -- 导入UTF-8编码的数据，-C 65001 指 UTF8
 -- Versions prior to version 13 (SQL Server 2016 (13.x)) do not support code page 65001 (UTF-8 encoding). 
 -- Versions beginning with 13 can import UTF-8 encoding to earlier versions of SQL Server.
-bcp DGT.dbo.Consumer_TMall in C:\Users\bming\Documents\VM-Share\consumer.csv -c -T -t, -S p7wsql00011\BI -F 2 -C 65001
+bcp DGT.dbo.Consumer_TMall in C:\Users\bming\Documents\VM-Share\consumer.csv -c -T -t, -S mysqlserver\BI -F 2 -C 65001
 
 
 
