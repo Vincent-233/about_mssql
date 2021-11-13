@@ -16,28 +16,28 @@ BACKUP DATABASE [ContainedTestDB] TO  DISK = N'C:\MyTest\DB Backup\ContainedTest
 GO
 
 -- 普通还原
-RESTORE DATABASE [BHG_Test] 
-FROM  DISK = N'E:\DB Backup\BHG_backup_2017_12_28.bak' WITH  FILE = 1,
-MOVE N'HRIS_dat' TO N'D:\Database\BHG_Test.mdf',  
-MOVE N'HRIS_Log' TO N'D:\Database\BHG_Test.ldf',  NOUNLOAD,  STATS = 5
+RESTORE DATABASE [Sample_Test] 
+FROM  DISK = N'E:\DB Backup\Sample_backup_2017_12_28.bak' WITH  FILE = 1,
+MOVE N'HRIS_dat' TO N'D:\Database\Sample_Test.mdf',  
+MOVE N'HRIS_Log' TO N'D:\Database\Sample_Test.ldf',  NOUNLOAD,  STATS = 5
 /*,REPLACE -- 覆盖*/
 
 -- 含事务日志还原 【Begin】
-RESTORE DATABASE [BHG] 
-FROM  DISK = N'E:\DB-File\Database Backup\BHG-DB Backup-20180116\BHG_backup_2018_01_17_000001_5549559.bak' WITH  FILE = 1,
-MOVE N'HRIS_dat' TO N'D:\DB-File\BHG.mdf',  
-MOVE N'HRIS_Log' TO N'D:\DB-File\BHG.ldf',  NOUNLOAD,  STATS = 5,NORECOVERY
+RESTORE DATABASE [Sample] 
+FROM  DISK = N'E:\DB-File\Database Backup\Sample-DB Backup-20180116\Sample_backup_2018_01_17_000001_5549559.bak' WITH  FILE = 1,
+MOVE N'HRIS_dat' TO N'D:\DB-File\Sample.mdf',  
+MOVE N'HRIS_Log' TO N'D:\DB-File\Sample.ldf',  NOUNLOAD,  STATS = 5,NORECOVERY
 /*,REPLACE -- 覆盖*/
 
-RESTORE LOG [BHG] 
-FROM  DISK = N'E:\DB-File\Database Backup\BHG-DB Backup-20180116\BHG_backup_2018_01_17_080001_0131627.trn' WITH  FILE = 1,  NOUNLOAD,  STATS = 10,NORECOVERY
+RESTORE LOG [Sample] 
+FROM  DISK = N'E:\DB-File\Database Backup\Sample-DB Backup-20180116\Sample_backup_2018_01_17_080001_0131627.trn' WITH  FILE = 1,  NOUNLOAD,  STATS = 10,NORECOVERY
 Go
 
-RESTORE LOG [BHG] 
-FROM  DISK = N'E:\DB-File\Database Backup\BHG-DB Backup-20180116\BHG_backup_2018_01_17_100001_4794303.trn' WITH  FILE = 1,  NOUNLOAD,  STATS = 10,NORECOVERY
+RESTORE LOG [Sample] 
+FROM  DISK = N'E:\DB-File\Database Backup\Sample-DB Backup-20180116\Sample_backup_2018_01_17_100001_4794303.trn' WITH  FILE = 1,  NOUNLOAD,  STATS = 10,NORECOVERY
 GO
 
-RESTORE DATABASE [BHG] WITH RECOVERY
+RESTORE DATABASE [Sample] WITH RECOVERY
 Go
 -- 含事务日志还原 【End】
 
