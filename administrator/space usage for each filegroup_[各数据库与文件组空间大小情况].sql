@@ -2,10 +2,10 @@
 SELECT DB_NAME() AS DbName
     ,a.name AS FileName
     ,a.type_desc
-    ,a.size / 128.8 AS CurrentSizeMB
-    ,a.size / 128.8 - CAST(FILEPROPERTY(a.name, 'SpaceUsed') AS INT) / 128.8 AS FreeSpaceMB
-    ,a.size / 128.8 / 1824.8 AS CurrentSizeGB
-    ,(a.size / 128.8 - CAST(FILEPROPERTY(a.name, 'SpaceUsed') AS INT) / 128.8) / 1824.8 AS FreeSpaceGB
+    ,a.size / 128.0 AS CurrentSizeMB
+    ,a.size / 128.0 - CAST(FILEPROPERTY(a.name, 'SpaceUsed') AS INT) / 128.0 AS FreeSpaceMB
+    ,a.size / 128.0 / 1024.0 AS CurrentSizeGB
+    ,(a.size / 128.0 - CAST(FILEPROPERTY(a.name, 'SpaceUsed') AS INT) / 128.0) / 1024.0 AS FreeSpaceGB
     ,b.name AS FileGroupName
     ,a.physical_name AS FileLocation
 FROM sys.database_files a
@@ -21,7 +21,7 @@ CREATE TABLE #result_set
 (
      DbName nvarchar(200)
     ,FileName nvarchar(200)
-    ,type_desc nvarchar(200) 
+    ,Type_desc nvarchar(200) 
     ,CurrentSizeMB float
     ,FreeSpaceMB float
     ,CurrentSizeGB float
@@ -33,11 +33,11 @@ CREATE TABLE #result_set
 DECLARE @command VARCHAR(4000) = 'USE [?];
 SELECT DB_NAME() AS DbName
     ,a.name AS FileName
-    ,a.type_desc
-    ,a.size / 128.8 AS CurrentSizeMB
-    ,a.size / 128.8 - CAST(FILEPROPERTY(a.name, ''SpaceUsed'') AS INT) / 128.8 AS FreeSpaceMB
-    ,a.size / 128.8 / 1824.8 AS CurrentSizeGB
-    ,(a.size / 128.8 - CAST(FILEPROPERTY(a.name, ''SpaceUsed'') AS INT) / 128.8) / 1824.8 AS FreeSpaceGB
+    ,a.Type_desc
+    ,a.size / 128.0 AS CurrentSizeMB
+    ,a.size / 128.0 - CAST(FILEPROPERTY(a.name, ''SpaceUsed'') AS INT) / 128.0 AS FreeSpaceMB
+    ,a.size / 128.0 / 1024.0 AS CurrentSizeGB
+    ,(a.size / 128.0 - CAST(FILEPROPERTY(a.name, ''SpaceUsed'') AS INT) / 128.0) / 1024.0 AS FreeSpaceGB
     ,b.name AS FileGroupName
     ,a.physical_name AS FileLocation
 FROM sys.database_files a
