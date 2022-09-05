@@ -1,19 +1,20 @@
 ------------------------------------------------------------------------
 --                           Method 1
 ------------------------------------------------------------------------
+-- by table, file_group ( all partition )
 SELECT TOP 1000
        DB_NAME() AS [database]
      , CONCAT(s.name, '.', t.name) AS table_full_name
      , s.name AS SchemaName
      , t.name AS TableName
      , SUM(CASE WHEN i.index_id < 2 THEN p.rows ELSE 0 END) AS RowCounts
-     , COUNT(DISTINCT p.partition_number) AS Partition_Cnt
+     , COUNT(DISTINCT p.partition_number) AS PartitionCount
      , f.name AS fileGrouopName
+     , CASE MAX(CASE WHEN i.type IN (0,1,5) THEN i.type ELSE 0 END) WHEN 0 THEN 'Heap' WHEN 1 THEN 'B-Tree' WHEN 5 THEN 'Clustered Columnstore' END AS TableType
      , CAST(ROUND((SUM(a.used_pages) / 128.00), 2) AS NUMERIC(36, 2)) AS Used_MB
-     --, CAST(ROUND((SUM(a.used_pages - a.data_pages) / 128.00), 2) AS NUMERIC(36, 2)) AS Index_MB
      , CAST(ROUND((SUM(a.total_pages) - SUM(a.used_pages)) / 128.00, 2) AS NUMERIC(36, 2)) AS Unused_MB
      , CAST(ROUND((SUM(a.total_pages) / 128.00), 2) AS NUMERIC(36, 2)) AS Total_MB
-     , CAST(ROUND((SUM(a.total_pages) / 128.00 / 1024), 2) AS NUMERIC(36, 2)) AS Tota1_GB
+     , CAST(ROUND((SUM(a.total_pages) / 128.00 / 1024), 2) AS NUMERIC(36, 2)) AS Total_GB
      , t.modify_date
 FROM sys.tables t
     INNER JOIN sys.indexes i ON t.object_id = i.object_id
@@ -28,12 +29,43 @@ GROUP BY s.name
 ORDER BY Total_MB DESC;
 GO
 
+-- by table, file_group, partition ( each partition )
+SELECT TOP 1000
+       DB_NAME() AS [database]
+     , CONCAT(s.name, '.', t.name) AS table_full_name
+     , s.name AS SchemaName
+     , t.name AS TableName
+     , p.partition_number
+     , SUM(CASE WHEN i.index_id < 2 THEN p.rows ELSE 0 END) AS RowCounts
+     , COUNT(DISTINCT i.index_id) AS IndexCount
+     , f.name AS FileGrouopName
+     , p.data_compression_desc
+     , CASE MAX(CASE WHEN i.type IN (0,1,5) THEN i.type ELSE 0 END) WHEN 0 THEN 'Heap' WHEN 1 THEN 'B-Tree' WHEN 5 THEN 'Clustered Columnstore' END AS TableType
+     , CAST(ROUND((SUM(a.used_pages) / 128.00), 2) AS NUMERIC(36, 2)) AS Used_MB
+     , CAST(ROUND((SUM(a.total_pages) - SUM(a.used_pages)) / 128.00, 2) AS NUMERIC(36, 2)) AS Unused_MB
+     , CAST(ROUND((SUM(a.total_pages) / 128.00), 2) AS NUMERIC(36, 2)) AS Total_MB
+     , CAST(ROUND((SUM(a.total_pages) / 128.00 / 1024), 2) AS NUMERIC(36, 2)) AS Total_GB
+     , t.modify_date
+FROM sys.tables t
+    INNER JOIN sys.indexes i ON t.object_id = i.object_id
+    INNER JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
+    INNER JOIN sys.allocation_units a ON p.partition_id = a.container_id
+    INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+    INNER JOIN sys.filegroups f ON a.data_space_id = f.data_space_id
+GROUP BY s.name
+       , t.name
+       , f.name
+       , t.modify_date
+       , p.partition_number
+       ,p.data_compression_desc
+ORDER BY Total_MB DESC;
+GO
 
 
 ------------------------------------------------------------------------
---           Method 1 -> from SSMS standard report
+--           Method 2 -> from SSMS standard report
 ------------------------------------------------------------------------
--- disk usage by top table 
+-- disk usage by top table ( the same result with sp_spaceused )
 SELECT TOP 1000
        ROW_NUMBER() OVER (ORDER BY (a1.reserved + ISNULL(a4.reserved, 0)) DESC) AS rn
      , a3.name AS [schemaname]
@@ -82,7 +114,7 @@ GO
 
 
 ------------------------------------------------------------------------
---           Method 2 -> sp_spaceused
+--           Method 3 -> sp_spaceused
 ------------------------------------------------------------------------
 IF OBJECT_ID('tempdb..#result_set') IS NOT NULL
     DROP TABLE #result_set;
@@ -100,10 +132,10 @@ INSERT INTO #result_set
 
 SELECT tablename
      , CAST(rows AS INT) AS row_count
-     , CAST(REPLACE(reserved, ' KB', '') AS INT) / 128.0 AS reserved_MB
-     , CAST(REPLACE(data, ' KB', '') AS INT) / 128.0 AS data_MB
-     , CAST(REPLACE(index_size, ' KB', '') AS INT) / 128.0 AS index_size_MB
-     , CAST(REPLACE(unused, ' KB', '') AS INT) / 128.0 AS unused_MB
+     , CAST(REPLACE(reserved, ' KB', '') AS INT) / 1024.0 AS reserved_MB
+     , CAST(REPLACE(data, ' KB', '') AS INT) / 1024.0 AS data_MB
+     , CAST(REPLACE(index_size, ' KB', '') AS INT) / 1024.0 AS index_size_MB
+     , CAST(REPLACE(unused, ' KB', '') AS INT) / 1024.0 AS unused_MB
 FROM #result_set
 ORDER BY 3 DESC;
 GO
