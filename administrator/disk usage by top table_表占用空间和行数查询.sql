@@ -9,7 +9,6 @@ SELECT TOP 1000
      , t.name AS TableName
      , SUM(CASE WHEN i.index_id < 2 THEN p.rows ELSE 0 END) AS RowCounts
      , COUNT(DISTINCT p.partition_number) AS PartitionCount
-     , f.name AS fileGrouopName
      , CASE MAX(CASE WHEN i.type IN (0,1,5) THEN i.type ELSE 0 END) WHEN 0 THEN 'Heap' WHEN 1 THEN 'B-Tree' WHEN 5 THEN 'Clustered Columnstore' END AS TableType
      , CAST(ROUND((SUM(a.used_pages) / 128.00), 2) AS NUMERIC(36, 2)) AS Used_MB
      , CAST(ROUND((SUM(a.total_pages) - SUM(a.used_pages)) / 128.00, 2) AS NUMERIC(36, 2)) AS Unused_MB
@@ -19,17 +18,22 @@ SELECT TOP 1000
 FROM sys.tables t
     INNER JOIN sys.indexes i ON t.object_id = i.object_id
     INNER JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
-    INNER JOIN sys.allocation_units a ON p.partition_id = a.container_id
+    INNER JOIN (
+        SELECT container_id, data_space_id
+              ,SUM(total_pages) AS total_pages, SUM(used_pages) AS used_pages
+              ,SUM(data_pages) AS data_pages
+        FROM sys.allocation_units 
+        GROUP BY container_id, data_space_id
+    ) AS a ON a.container_id = p.partition_id
     INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
-    INNER JOIN sys.filegroups f ON a.data_space_id = f.data_space_id
 GROUP BY s.name
        , t.name
-       , f.name
        , t.modify_date
 ORDER BY Total_MB DESC;
 GO
 
--- by table, file_group, partition ( each partition )
+
+-- by table, file_group, partition ( each partition, with compression, file group )
 SELECT TOP 1000
        DB_NAME() AS [database]
      , CONCAT(s.name, '.', t.name) AS table_full_name
@@ -49,7 +53,13 @@ SELECT TOP 1000
 FROM sys.tables t
     INNER JOIN sys.indexes i ON t.object_id = i.object_id
     INNER JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
-    INNER JOIN sys.allocation_units a ON p.partition_id = a.container_id
+    INNER JOIN (
+        SELECT container_id, data_space_id
+              ,SUM(total_pages) AS total_pages, SUM(used_pages) AS used_pages
+              ,SUM(data_pages) AS data_pages
+        FROM sys.allocation_units 
+        GROUP BY container_id, data_space_id
+    ) AS a ON a.container_id = p.partition_id
     INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
     INNER JOIN sys.filegroups f ON a.data_space_id = f.data_space_id
 GROUP BY s.name
